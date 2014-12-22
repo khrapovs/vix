@@ -1,2 +1,2 @@
-Compute VIX and realted volatility indices
-==========================================
+VIX and realted volatility indices
+==================================
