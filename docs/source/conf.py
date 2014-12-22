@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 import mock
 
-MOCK_MODULES = ['numpy', 'pandas',
+MOCK_MODULES = ['numpy', 'pandas', 'datetime',
                 'matplotlib', 'matplotlib.pylab', 'seaborn']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
