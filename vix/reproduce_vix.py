@@ -91,20 +91,31 @@ __author__ = "Stanislav Khrapov"
 __email__ = "khrapovs@gmail.com"
 
 
-def whitepaper():
-    ### Import yields
+def import_yields():
+    """Import yields.
 
-    # In the white paper it is assumed that the risk-free rate is 0.38%
-    # for both near- and nex-term options.
-    # The date chosen for computation is Jan 1, 2009 with options expiring
-    # in 9 and 37 days.
+    Date,Days,Rate
+    20090101,9,0.38
+    20090101,37,0.38
 
+    """
     f = lambda x: dt.datetime.strptime(x, '%Y%m%d')
     yields = pd.read_csv('../data/yields.csv', converters={'Date': f})
     yields = yields.set_index(['Date', 'Days'])
 
-    ### Import options
+    return yields
 
+def import_options():
+    """Import options.
+
+    Expiration,Days,Strike,Call Bid,Call Ask,Put Bid,Put Ask
+    20090110,9,200,717.6,722.8,0,0.05
+    20090110,9,250,667.6,672.9,0,0.05
+    20090110,9,300,617.9,622.9,0,0.05
+    20090110,9,350,567.9,572.9,0,0.05
+    20090110,9,375,542.9,547.9,0,0.1
+
+    """
     # Function to parse dates of '20090101' format
     f = lambda x: dt.datetime.strptime(x, '%Y%m%d')
     raw_options = pd.read_csv('../data/options.csv',
@@ -118,11 +129,16 @@ def whitepaper():
     # Otherwise it may lead to accumulation of errors.
     raw_options['Strike'] = raw_options['Strike'].astype(float)
 
-    ### Do some cleaning and indexing
+    return raw_options
 
+
+def clean_options(options):
+    """Clean and index option data set.
+
+    """
     # Since VIX is computed for the date of option quotations,
     # we do not really need Expiration
-    options = raw_options.set_index(['Date','Days','Strike']).drop('Expiration', axis = 1)
+    options = options.set_index(['Date','Days','Strike']).drop('Expiration', axis = 1)
 
     # Do some renaming and separate calls from puts
     calls = options[['Call Bid','Call Ask']].rename(columns = {'Call Bid' : 'Bid', 'Call Ask' : 'Ask'})
@@ -137,28 +153,38 @@ def whitepaper():
     # Reindex and sort
     options = options.reset_index().set_index(['Date','Days','CP','Strike']).sort_index()
 
-    ### Compute bid/ask average
+    return options
+
+def bid_ask_average(options):
+    """Compute bid/ask average
+
+    """
 
     # This step is used further to filter out in-the-money options.
 
     options['Premium'] = (options['Bid'] + options['Ask']) / 2
-    options2 = options[options['Bid'] > 0]['Premium'].unstack('CP')
+    options = options[options['Bid'] > 0]['Premium'].unstack('CP')
+    return options
 
-    ### Determine minimum difference
 
-    # In[6]:
+def put_call_parity(options):
+    """Find put-call parity.
+
+    """
 
     # Find the absolute difference
-    options2['CPdiff'] = (options2['C'] - options2['P']).abs()
+    options['CPdiff'] = (options['C'] - options['P']).abs()
     # Mark the minimum for each date/term
-    options2['min'] = options2['CPdiff'].groupby(level=['Date','Days']).transform(lambda x: x == x.min())
+    options['min'] = options['CPdiff'].groupby(level=['Date','Days']).transform(lambda x: x == x.min())
+    return options
 
-    print(options2.ix[(dt.date(2009,1,1),9,910):(dt.date(2009,1,1),9,930)])
 
-    ### Compute forward price
+def forward_price(options, yields):
+    """Compute forward price.
 
+    """
     # Leave only at-the-money optons
-    df = options2[options2['min'] == 1].reset_index()
+    df = options[options['min'] == 1].reset_index()
     # Merge with risk-free rate
     df = pd.merge(df, yields.reset_index(), how = 'left')
 
@@ -166,18 +192,26 @@ def whitepaper():
     df['Forward'] = df['CPdiff'] * np.exp(df['Rate'] * df['Days'] / 36500)
     df['Forward'] += df['Strike']
     forward = df.set_index(['Date','Days'])[['Forward']]
+    return forward
 
-    ### Compute at-the-money strike
 
+def at_the_money_strike(options, forward):
+    """Compute at-the-money strike.
+
+    """
     # Merge options with implied forward price
-    left = options2.reset_index().set_index(['Date','Days'])
+    left = options.reset_index().set_index(['Date','Days'])
     df = pd.merge(left, forward, left_index = True, right_index = True)
     # Compute at-the-money strike
     mid_strike = df[df['Strike'] < df['Forward']]['Strike'].groupby(level = ['Date','Days']).max()
     mid_strike = pd.DataFrame({'Mid Strike' : mid_strike})
+    return mid_strike
 
-    ### Separate out-of-the-money calls and puts
 
+def leave_out_of_the_money(options, mid_strike):
+    """Separate out-of-the-money calls and puts.
+
+    """
     # Go back to original data and reindex it
     left = options.reset_index().set_index(['Date','Days']).drop('Premium', axis = 1)
     # Merge with at-the-money strike
@@ -186,9 +220,13 @@ def whitepaper():
     P = (df['Strike'] <= df['Mid Strike']) & (df['CP'] == 'P')
     C = (df['Strike'] >= df['Mid Strike']) & (df['CP'] == 'C')
     puts, calls = df[P], df[C]
+    return puts, calls
 
-    ### Remove all quotes after two consequtive zero bids
 
+def remove_crazy_quotes(calls, puts):
+    """Remove all quotes after two consequtive zero bids.
+
+    """
     # Indicator of zero bid
     calls['zero_bid'] = (calls['Bid'] == 0).astype(int)
     # Accumulate number of zero bids starting at-the-money
@@ -205,13 +243,17 @@ def whitepaper():
     options3 = pd.concat([calls, puts]).reset_index()
     # Throw away bad stuff
     options3 = options3[(options3['zero_bid_accum'] < 2) & (options3['Bid'] > 0)]
-
     # Compute option premium as bid/ask average
     options3['Premium'] = (options3['Bid'] + options3['Ask']) / 2
     options3 = options3.set_index(['Date','Days','CP','Strike'])['Premium'].unstack('CP')
 
-    ### Compute out-of-the-money option price
+    return options3
 
+
+def out_of_the_money_options(options3, mid_strike):
+    """Compute out-of-the-money option price.
+
+    """
     # Merge wth at-the-money strike price
     left = options3.reset_index().set_index(['Date','Days'])
     df = pd.merge(left, mid_strike, left_index = True, right_index = True)
@@ -226,21 +268,29 @@ def whitepaper():
     df['Premium'].ix[condition2] = df['C'].ix[condition2]
 
     options4 = df[['Strike','Mid Strike','Premium']].copy()
+    return options4
 
-    ### Compute difference between adjoining strikes
 
-    # Note that the strikes must be floats!!! In Python 3/2=1 and 3./2=1.5!
+def f(group):
+    new = group.copy()
+    new.iloc[1:-1] = np.array((group.iloc[2:] - group.iloc[:-2]) / 2)
+    new.iloc[0] = group.iloc[1] - group.iloc[0]
+    new.iloc[-1] = group.iloc[-1] - group.iloc[-2]
+    return new
 
-    def f(group):
-        new = group.copy()
-        new.iloc[1:-1] = np.array((group.iloc[2:] - group.iloc[:-2]) / 2)
-        new.iloc[0] = group.iloc[1] - group.iloc[0]
-        new.iloc[-1] = group.iloc[-1] - group.iloc[-2]
-        return new
 
-    options4['dK'] = options4.groupby(level = ['Date','Days'])['Strike'].apply(f)
+def strike_diff(options):
+    """Compute difference between adjoining strikes
 
-    ### Compute contribution of each strike
+    """
+    options['dK'] = options.groupby(level = ['Date','Days'])['Strike'].apply(f)
+    return options
+
+
+def strike_contribution(options4, yields):
+    """Compute contribution of each strike.
+
+    """
 
     # Merge with risk-free rate
     contrib = pd.merge(options4, yields, left_index = True, right_index = True).reset_index()
@@ -248,7 +298,13 @@ def whitepaper():
     contrib['sigma2'] = contrib['dK'] / contrib['Strike'] ** 2
     contrib['sigma2'] *= contrib['Premium'] * np.exp(contrib['Rate'] * contrib['Days'] / 36500)
 
-    ### Compute each preiod index
+    return contrib
+
+
+def each_period_vol(contrib, mid_strike, forward):
+    """Compute each preiod index.
+
+    """
 
     # Sum up contributions from all strikes
     sigma2 = contrib.groupby(['Date','Days'])[['sigma2']].sum() * 2
@@ -262,34 +318,42 @@ def whitepaper():
     sigma2['sigma2'] /= sigma2.index.get_level_values(1).astype(float) / 365
     sigma2 = sigma2[['sigma2']]
 
-    print(sigma2.head())
+    return sigma2
 
 
-    ### Compute interpolated index
+def near_next_term(group):
+    """This function determines near- and next-term
+    if there are several maturities in the data.
 
-    # This function determines near- and next-term if there are several maturities in the data
-    def f(group):
-        days = np.array(group['Days'])
-        sigma2 = np.array(group['sigma2'])
+    """
+    days = np.array(group['Days'])
+    sigma2 = np.array(group['sigma2'])
 
-        if days.min() <= 30:
-            T1 = days[days <= 30].max()
-        else:
-            T1 = days.min()
+    if days.min() <= 30:
+        T1 = days[days <= 30].max()
+    else:
+        T1 = days.min()
 
-        T2 = days[days > T1].min()
+    T2 = days[days > T1].min()
 
-        sigma_T1 = sigma2[days == T1][0]
-        sigma_T2 = sigma2[days == T2][0]
+    sigma_T1 = sigma2[days == T1][0]
+    sigma_T2 = sigma2[days == T2][0]
 
-        return pd.DataFrame([{'T1' : T1, 'T2' : T2, 'sigma2_T1' : sigma_T1, 'sigma2_T2' : sigma_T2}])
-
-    two_sigmas = sigma2.reset_index().groupby('Date').apply(f).groupby(level = 'Date').first()
-
-    print(two_sigmas.head())
+    return pd.DataFrame([{'T1' : T1, 'T2' : T2, 'sigma2_T1' : sigma_T1, 'sigma2_T2' : sigma_T2}])
 
 
-    ### Interpolate the VIX
+def interpolate_vol(sigma2):
+    """Compute interpolated index.
+
+    """
+    two_sigmas = sigma2.reset_index().groupby('Date').apply(near_next_term).groupby(level = 'Date').first()
+    return two_sigmas
+
+
+def interpolate_vix(two_sigmas):
+    """Interpolate the VIX.
+
+    """
 
     df = two_sigmas.copy()
 
@@ -302,6 +366,56 @@ def whitepaper():
     df['sigma2_T1'] = df['sigma2_T1'] * df['days_T1'] * (df['T2'] - 30. * 1440.)
     df['sigma2_T2'] = df['sigma2_T2'] * df['days_T2'] * (30. * 1440. - df['T1'])
     df['VIX'] = ((df['sigma2_T1'] + df['sigma2_T2']) / (df['T2'] - df['T1']) * 365. / 30.) ** .5 * 100
+
+    return df
+
+
+def whitepaper():
+
+    ### Import yields
+    yields = import_yields()
+
+    ### Import options
+    raw_options = import_options()
+
+    ### Do some cleaning and indexing
+    options = clean_options(raw_options)
+
+    ### Compute bid/ask average
+    options2 = bid_ask_average(options)
+
+    ### Put-call parity
+    options2 = put_call_parity(options2)
+
+    ### Compute forward price
+    forward = forward_price(options2, yields)
+
+    ### Compute at-the-money strike
+    mid_strike = at_the_money_strike(options2, forward)
+
+    ### Separate out-of-the-money calls and puts
+    puts, calls = leave_out_of_the_money(options, mid_strike)
+
+    ### Remove all quotes after two consequtive zero bids
+    options3 = remove_crazy_quotes(calls, puts)
+
+    ### Compute out-of-the-money option price
+    options4 = out_of_the_money_options(options3, mid_strike)
+
+    ### Compute difference between adjoining strikes
+    options4 = strike_diff(options4)
+
+    ### Compute contribution of each strike
+    contrib = strike_contribution(options4, yields)
+
+    ### Compute each preiod index
+    sigma2 = each_period_vol(contrib, mid_strike, forward)
+
+    ### Compute interpolated index
+    two_sigmas = interpolate_vol(sigma2)
+
+    ### Interpolate the VIX
+    df = interpolate_vix(two_sigmas)
 
     return df[['VIX']]
 
