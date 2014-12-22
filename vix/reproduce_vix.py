@@ -105,6 +105,7 @@ def import_yields():
 
     return yields
 
+
 def import_options():
     """Import options.
 
@@ -154,6 +155,7 @@ def clean_options(options):
     options = options.reset_index().set_index(['Date','Days','CP','Strike']).sort_index()
 
     return options
+
 
 def bid_ask_average(options):
     """Compute bid/ask average
@@ -422,5 +424,5 @@ def whitepaper():
 
 if __name__ == '__main__':
 
-    vix = whitepaper()
-    print(vix)
+    vixvalue = whitepaper()
+    print(vixvalue)
