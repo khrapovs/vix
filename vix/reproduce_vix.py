@@ -58,20 +58,17 @@ the out-of-the-money option premium is
 at-the-money strike price is
 
 .. math::
-    K_{*} =   \max\left\{
-    K_{i}<F\right\},
+    K_{*} =   \max\left\{K_{i}<F\right\},
 
 forward price extracted from put-call parity:
 
 .. math::
-    F =
-    K_{j}+e^{rT}\left|C_{j}-P_{j}\right|,
+    F = K_{j}+e^{rT}\left|C_{j}-P_{j}\right|,
 
 with
 
 .. math::
-    j=\min\left\{
-    \left|C_{i}-P_{i}\right|\right\},
+    j=\min\left\{\left|C_{i}-P_{i}\right|\right\},
 
 and finally :math:`r` is the constant risk-free
 short rate appropriate for maturity :math:`T`.
