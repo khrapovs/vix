@@ -6,3 +6,5 @@ VIX and related volatility indices
 ==================================
 
 `Documentation <http://vix.readthedocs.org/en/latest/>`_
+
+`IPython notebook <http://nbviewer.ipython.org/github/khrapovs/vix/blob/master/notebooks/Replicate_VIXwite.ipynb>`_
