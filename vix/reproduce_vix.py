@@ -7,7 +7,7 @@ VIX replication
 This file shows how to reproduce the VIX given the data in [1]_. The code
 works for any option data set, not only one day as in the White Paper. The
 option data for this example is exactly the same as in the Appendix 1 of the
-White Paper.
+White Paper. The code is only tested on Python 3.4!
 
 Given are the prices :math:`C_{i}`, :math:`i\in\left\{ 0,\ldots,n\right\}`, of
 a series of European call options on the index with fixed maturity date
@@ -90,7 +90,6 @@ __email__ = "khrapovs@gmail.com"
 
 def import_yields():
     """Import yields.
-
     Date,Days,Rate
     20090101,9,0.38
     20090101,37,0.38
@@ -136,11 +135,14 @@ def clean_options(options):
     """
     # Since VIX is computed for the date of option quotations,
     # we do not really need Expiration
-    options = options.set_index(['Date','Days','Strike']).drop('Expiration', axis = 1)
+    options.set_index(['Date', 'Days', 'Strike'], inplace=True)
+    options.drop('Expiration', axis=1, inplace=True)
 
     # Do some renaming and separate calls from puts
-    calls = options[['Call Bid','Call Ask']].rename(columns = {'Call Bid' : 'Bid', 'Call Ask' : 'Ask'})
-    puts = options[['Put Bid','Put Ask']].rename(columns = {'Put Bid' : 'Bid', 'Put Ask' : 'Ask'})
+    cols = {'Call Bid': 'Bid', 'Call Ask': 'Ask'}
+    calls = options[['Call Bid','Call Ask']].rename(columns=cols)
+    cols = {'Put Bid': 'Bid', 'Put Ask': 'Ask'}
+    puts = options[['Put Bid','Put Ask']].rename(columns=cols)
 
     # Add a column indicating the type of the option
     calls['CP'], puts['CP'] = 'C', 'P'
@@ -149,7 +151,9 @@ def clean_options(options):
     options = pd.concat([calls, puts])
 
     # Reindex and sort
-    options = options.reset_index().set_index(['Date','Days','CP','Strike']).sort_index()
+    options.reset_index(inplace=True)
+    options.set_index(['Date', 'Days', 'CP', 'Strike'], inplace=True)
+    options.sort_index(inplace=True)
 
     return options
 
@@ -174,7 +178,8 @@ def put_call_parity(options):
     # Find the absolute difference
     options['CPdiff'] = (options['C'] - options['P']).abs()
     # Mark the minimum for each date/term
-    options['min'] = options['CPdiff'].groupby(level=['Date','Days']).transform(lambda x: x == x.min())
+    grouped = options['CPdiff'].groupby(level=['Date', 'Days'])
+    options['min'] = grouped.transform(lambda x: x == x.min())
     return options
 
 
@@ -190,7 +195,7 @@ def forward_price(options, yields):
     # Compute the implied forward
     df['Forward'] = df['CPdiff'] * np.exp(df['Rate'] * df['Days'] / 36500)
     df['Forward'] += df['Strike']
-    forward = df.set_index(['Date','Days'])[['Forward']]
+    forward = df.set_index(['Date', 'Days'])[['Forward']]
     return forward
 
 
@@ -202,7 +207,8 @@ def at_the_money_strike(options, forward):
     left = options.reset_index().set_index(['Date','Days'])
     df = pd.merge(left, forward, left_index = True, right_index = True)
     # Compute at-the-money strike
-    mid_strike = df[df['Strike'] < df['Forward']]['Strike'].groupby(level = ['Date','Days']).max()
+    df = df[df['Strike'] < df['Forward']]['Strike']
+    mid_strike = df.groupby(level=['Date', 'Days']).max()
     mid_strike = pd.DataFrame({'Mid Strike' : mid_strike})
     return mid_strike
 
@@ -212,9 +218,11 @@ def leave_out_of_the_money(options, mid_strike):
 
     """
     # Go back to original data and reindex it
-    left = options.reset_index().set_index(['Date','Days']).drop('Premium', axis = 1)
+    left = options.reset_index()
+    left.set_index(['Date', 'Days'], inplace=True)
+    left.drop('Premium', axis=1, inplace=True)
     # Merge with at-the-money strike
-    df = pd.merge(left, mid_strike, left_index = True, right_index = True)
+    df = pd.merge(left, mid_strike, left_index=True, right_index=True)
     # Separate out-of-the-money calls and puts
     P = (df['Strike'] <= df['Mid Strike']) & (df['CP'] == 'P')
     C = (df['Strike'] >= df['Mid Strike']) & (df['CP'] == 'C')
@@ -229,22 +237,27 @@ def remove_crazy_quotes(calls, puts):
     # Indicator of zero bid
     calls['zero_bid'] = (calls['Bid'] == 0).astype(int)
     # Accumulate number of zero bids starting at-the-money
-    calls['zero_bid_accum'] = calls.groupby(level = ['Date','Days'])['zero_bid'].cumsum()
+    grouped = calls.groupby(level=['Date', 'Days'])['zero_bid']
+    calls['zero_bid_accum'] = grouped.cumsum()
 
     # Sort puts in reverse order inside date/term
-    puts = puts.groupby(level = ['Date','Days']).apply(lambda x: x.sort_values(by='Strike', ascending = False))
+    grouped = puts.groupby(level=['Date', 'Days'])
+    puts = grouped.apply(lambda x: x.sort_values(by='Strike', ascending=False))
     # Indicator of zero bid
     puts['zero_bid'] = (puts['Bid'] == 0).astype(int)
     # Accumulate number of zero bids starting at-the-money
-    puts['zero_bid_accum'] = puts.groupby(level = ['Date','Days'])['zero_bid'].cumsum()
+    grouped = puts.groupby(level = ['Date','Days'])['zero_bid']
+    puts['zero_bid_accum'] = grouped.cumsum()
 
     # Merge puts and cals
     options3 = pd.concat([calls, puts]).reset_index()
     # Throw away bad stuff
-    options3 = options3[(options3['zero_bid_accum'] < 2) & (options3['Bid'] > 0)]
+    options3 = options3[(options3['zero_bid_accum'] < 2)
+                        & (options3['Bid'] > 0)]
     # Compute option premium as bid/ask average
     options3['Premium'] = (options3['Bid'] + options3['Ask']) / 2
-    options3 = options3.set_index(['Date','Days','CP','Strike'])['Premium'].unstack('CP')
+    options3.set_index(['Date','Days','CP','Strike'], inplace=True)
+    options3 = options3['Premium'].unstack('CP')
 
     return options3
 
@@ -292,10 +305,12 @@ def strike_contribution(options4, yields):
     """
 
     # Merge with risk-free rate
-    contrib = pd.merge(options4, yields, left_index = True, right_index = True).reset_index()
+    contrib = pd.merge(options4, yields, left_index=True, right_index=True)
+    contrib.reset_index(inplace=True)
 
     contrib['sigma2'] = contrib['dK'] / contrib['Strike'] ** 2
-    contrib['sigma2'] *= contrib['Premium'] * np.exp(contrib['Rate'] * contrib['Days'] / 36500)
+    contrib['sigma2'] *= (contrib['Premium']
+        * np.exp(contrib['Rate'] * contrib['Days'] / 36500))
 
     return contrib
 
@@ -337,15 +352,17 @@ def near_next_term(group):
 
     sigma_T1 = sigma2[days == T1][0]
     sigma_T2 = sigma2[days == T2][0]
+    data = [{'T1': T1, 'T2': T2, 'sigma2_T1': sigma_T1, 'sigma2_T2': sigma_T2}]
 
-    return pd.DataFrame([{'T1' : T1, 'T2' : T2, 'sigma2_T1' : sigma_T1, 'sigma2_T2' : sigma_T2}])
+    return pd.DataFrame(data)
 
 
 def interpolate_vol(sigma2):
     """Compute interpolated index.
 
     """
-    two_sigmas = sigma2.reset_index().groupby('Date').apply(near_next_term).groupby(level = 'Date').first()
+    grouped = sigma2.reset_index().groupby('Date')
+    two_sigmas = grouped.apply(near_next_term).groupby(level='Date').first()
     return two_sigmas
 
 
@@ -360,12 +377,12 @@ def interpolate_vix(two_sigmas):
         # Convert to fraction of the year
         df['days_' + t] = df[t].astype(float) / 365
         # Convert to miutes
-        df[t] = (df[t] - 1) * 1440. + 510 + 930
+        df[t] = (df[t] - 1) * 1440 + 510 + 930
 
-    df['sigma2_T1'] = df['sigma2_T1'] * df['days_T1'] * (df['T2'] - 30. * 1440.)
-    df['sigma2_T2'] = df['sigma2_T2'] * df['days_T2'] * (30. * 1440. - df['T1'])
+    df['sigma2_T1'] = df['sigma2_T1'] * df['days_T1'] * (df['T2'] - 30*1440)
+    df['sigma2_T2'] = df['sigma2_T2'] * df['days_T2'] * (30*1440 - df['T1'])
     df['VIX'] = ((df['sigma2_T1'] + df['sigma2_T2'])
-        / (df['T2'] - df['T1']) * 365. / 30.) ** .5 * 100
+        / (df['T2'] - df['T1']) * 365 / 30) ** .5 * 100
 
     return df
 
