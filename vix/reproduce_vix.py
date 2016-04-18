@@ -232,7 +232,7 @@ def remove_crazy_quotes(calls, puts):
     calls['zero_bid_accum'] = calls.groupby(level = ['Date','Days'])['zero_bid'].cumsum()
 
     # Sort puts in reverse order inside date/term
-    puts = puts.groupby(level = ['Date','Days']).apply(lambda x: x.sort_index(by = 'Strike', ascending = False))
+    puts = puts.groupby(level = ['Date','Days']).apply(lambda x: x.sort_values(by='Strike', ascending = False))
     # Indicator of zero bid
     puts['zero_bid'] = (puts['Bid'] == 0).astype(int)
     # Accumulate number of zero bids starting at-the-money
@@ -364,7 +364,8 @@ def interpolate_vix(two_sigmas):
 
     df['sigma2_T1'] = df['sigma2_T1'] * df['days_T1'] * (df['T2'] - 30. * 1440.)
     df['sigma2_T2'] = df['sigma2_T2'] * df['days_T2'] * (30. * 1440. - df['T1'])
-    df['VIX'] = ((df['sigma2_T1'] + df['sigma2_T2']) / (df['T2'] - df['T1']) * 365. / 30.) ** .5 * 100
+    df['VIX'] = ((df['sigma2_T1'] + df['sigma2_T2'])
+        / (df['T2'] - df['T1']) * 365. / 30.) ** .5 * 100
 
     return df
 
