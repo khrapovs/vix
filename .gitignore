@@ -4,7 +4,6 @@
 *.pyc
 *.m~
 *.mat
-*.csv
 *.npz
 *.h5
 *.tex~
