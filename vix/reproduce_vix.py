@@ -343,12 +343,14 @@ def near_next_term(group):
     days = np.array(group['Days'])
     sigma2 = np.array(group['sigma2'])
 
-    if days.min() <= 30:
-        T1 = days[days <= 30].max()
+    if days.min() < 30:
+        T1 = days[days < 30].max()
+        T2 = days[days > T1].min()
+    elif (days.min() == 30) or (days.max() == 30):
+        T1 = T2 = 30
     else:
         T1 = days.min()
-
-    T2 = days[days > T1].min()
+        T2 = days[days > T1].min()
 
     sigma_T1 = sigma2[days == T1][0]
     sigma_T2 = sigma2[days == T2][0]
@@ -379,10 +381,15 @@ def interpolate_vix(two_sigmas):
         # Convert to miutes
         df[t] = (df[t] - 1) * 1440 + 510 + 930
 
-    df['sigma2_T1'] = df['sigma2_T1'] * df['days_T1'] * (df['T2'] - 30*1440)
-    df['sigma2_T2'] = df['sigma2_T2'] * df['days_T2'] * (30*1440 - df['T1'])
-    df['VIX'] = ((df['sigma2_T1'] + df['sigma2_T2'])
-        / (df['T2'] - df['T1']) * 365 / 30) ** .5 * 100
+    denom = df['T2'] - df['T1']
+    if denom[0] > 0:
+        coef1 = df['days_T1'] * (df['T2'] - 30*1440) / denom
+        coef2 = df['days_T2'] * (30*1440 - df['T1']) / denom
+    else:
+        coef1 = coef2 = df['days_T1']
+    df['sigma2_T1'] = df['sigma2_T1'] * coef1
+    df['sigma2_T2'] = df['sigma2_T2'] * coef2
+    df['VIX'] = ((df['sigma2_T1'] + df['sigma2_T2']) * 365 / 30) ** .5 * 100
 
     return df
 
@@ -394,6 +401,13 @@ def whitepaper():
 
     ### Import options
     raw_options = import_options()
+
+    # Uncomment this block to check that VIX is computed,
+    # when there are options with exactly 30 days to expire.
+#    yields.reset_index('Days', inplace=True)
+#    yields['Days'] += 21
+#    yields.set_index('Days', inplace=True, append=True)
+#    raw_options['Days'] += 21
 
     ### Do some cleaning and indexing
     options = clean_options(raw_options)
