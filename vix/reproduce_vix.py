@@ -188,7 +188,8 @@ def forward_price(options, yields):
 
     """
     # Leave only at-the-money optons
-    df = options[options['min'] == 1].reset_index()
+    df = options[options['min'] == 1].reset_index('Strike')
+    df = df.groupby(level=['Date', 'Days']).first().reset_index()
     # Merge with risk-free rate
     df = pd.merge(df, yields.reset_index(), how = 'left')
 
