@@ -4,7 +4,7 @@ Created on Fri Jul 27 20:55:06 2012
 
 @author: khrapovs
 """
-import pandas as ps
+import pandas as pd
 import numpy as np
 
 ' ------------------------------------------------------------------ '
@@ -89,7 +89,7 @@ def raw_sigma(group):
         g['FK0'] = (g['Forward'] / g['K0'] - 1) ** 2
     
     ' Concatenate near/next term optios '
-    group = ps.concat([group1, group2])
+    group = pd.concat([group1, group2])
     ' Apply near/next term weights '
     group['sigma2'] = group['sigma2'] * group['weight']
     ' Leave only positive variances '

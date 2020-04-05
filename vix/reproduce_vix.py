@@ -78,8 +78,6 @@ References
 .. [1] CBOE White Paper, http://www.cboe.com/micro/vix/vixwhite.pdf
 
 """
-from __future__ import print_function, division
-
 import numpy as np
 import pandas as pd
 import datetime as dt
@@ -95,11 +93,9 @@ def import_yields():
     20090101,37,0.38
 
     """
-    f = lambda x: dt.datetime.strptime(x, '%Y%m%d')
-    yields = pd.read_csv('../data/yields.csv', converters={'Date': f})
-    yields = yields.set_index(['Date', 'Days'])
-
-    return yields
+    yields = pd.read_csv('../data/yields.csv',
+                         converters={'Date': lambda x: dt.datetime.strptime(x, '%Y%m%d')})
+    return yields.set_index(['Date', 'Days'])
 
 
 def import_options():
@@ -114,14 +110,11 @@ def import_options():
 
     """
     # Function to parse dates of '20090101' format
-    f = lambda x: dt.datetime.strptime(x, '%Y%m%d')
     raw_options = pd.read_csv('../data/options.csv',
-                              converters={'Expiration': f})
+                              converters={'Expiration': lambda x: dt.datetime.strptime(x, '%Y%m%d')})
 
     # Function to convert days to internal timedelta format
-    f_delta = lambda x: dt.timedelta(days=int(x))
-    raw_options['Date'] = raw_options['Expiration'] \
-        - raw_options['Days'].map(f_delta)
+    raw_options['Date'] = raw_options['Expiration'] - raw_options['Days'].map(lambda x: dt.timedelta(days=int(x)))
     # Convert integer strikes to float!
     # Otherwise it may lead to accumulation of errors.
     raw_options['Strike'] = raw_options['Strike'].astype(float)
@@ -139,10 +132,8 @@ def clean_options(options):
     options.drop('Expiration', axis=1, inplace=True)
 
     # Do some renaming and separate calls from puts
-    cols = {'Call Bid': 'Bid', 'Call Ask': 'Ask'}
-    calls = options[['Call Bid','Call Ask']].rename(columns=cols)
-    cols = {'Put Bid': 'Bid', 'Put Ask': 'Ask'}
-    puts = options[['Put Bid','Put Ask']].rename(columns=cols)
+    calls = options[['Call Bid', 'Call Ask']].rename(columns={'Call Bid': 'Bid', 'Call Ask': 'Ask'})
+    puts = options[['Put Bid', 'Put Ask']].rename(columns={'Put Bid': 'Bid', 'Put Ask': 'Ask'})
 
     # Add a column indicating the type of the option
     calls['CP'], puts['CP'] = 'C', 'P'
@@ -187,11 +178,11 @@ def forward_price(options, yields):
     """Compute forward price.
 
     """
-    # Leave only at-the-money optons
+    # Leave only at-the-money options
     df = options[options['min'] == 1].reset_index('Strike')
     df = df.groupby(level=['Date', 'Days']).first().reset_index()
     # Merge with risk-free rate
-    df = pd.merge(df, yields.reset_index(), how = 'left')
+    df = pd.merge(df, yields.reset_index(), how='left')
 
     # Compute the implied forward
     df['Forward'] = df['CPdiff'] * np.exp(df['Rate'] * df['Days'] / 36500)
@@ -205,12 +196,12 @@ def at_the_money_strike(options, forward):
 
     """
     # Merge options with implied forward price
-    left = options.reset_index().set_index(['Date','Days'])
-    df = pd.merge(left, forward, left_index = True, right_index = True)
+    left = options.reset_index().set_index(['Date', 'Days'])
+    df = pd.merge(left, forward, left_index=True, right_index=True)
     # Compute at-the-money strike
     df = df[df['Strike'] < df['Forward']]['Strike']
     mid_strike = df.groupby(level=['Date', 'Days']).max()
-    mid_strike = pd.DataFrame({'Mid Strike' : mid_strike})
+    mid_strike = pd.DataFrame({'Mid Strike': mid_strike})
     return mid_strike
 
 
@@ -247,17 +238,16 @@ def remove_crazy_quotes(calls, puts):
     # Indicator of zero bid
     puts['zero_bid'] = (puts['Bid'] == 0).astype(int)
     # Accumulate number of zero bids starting at-the-money
-    grouped = puts.groupby(level = ['Date','Days'])['zero_bid']
+    grouped = puts.groupby(level=['Date', 'Days'])['zero_bid']
     puts['zero_bid_accum'] = grouped.cumsum()
 
-    # Merge puts and cals
+    # Merge puts and calls
     options3 = pd.concat([calls, puts]).reset_index()
     # Throw away bad stuff
-    options3 = options3[(options3['zero_bid_accum'] < 2)
-                        & (options3['Bid'] > 0)]
+    options3 = options3[(options3['zero_bid_accum'] < 2) & (options3['Bid'] > 0)]
     # Compute option premium as bid/ask average
     options3['Premium'] = (options3['Bid'] + options3['Ask']) / 2
-    options3.set_index(['Date','Days','CP','Strike'], inplace=True)
+    options3.set_index(['Date', 'Days', 'CP', 'Strike'], inplace=True)
     options3 = options3['Premium'].unstack('CP')
 
     return options3
@@ -268,8 +258,8 @@ def out_of_the_money_options(options3, mid_strike):
 
     """
     # Merge wth at-the-money strike price
-    left = options3.reset_index().set_index(['Date','Days'])
-    df = pd.merge(left, mid_strike, left_index = True, right_index = True)
+    left = options3.reset_index().set_index(['Date', 'Days'])
+    df = pd.merge(left, mid_strike, left_index=True, right_index=True)
 
     # Conditions to separate out-of-the-money puts and calls
     condition1 = df['Strike'] < df['Mid Strike']
@@ -277,10 +267,10 @@ def out_of_the_money_options(options3, mid_strike):
     # At-the-money we have two quotes, so take the average
     df['Premium'] = (df['P'] + df['C']) / 2
     # Remove in-the-money options
-    df['Premium'].ix[condition1] = df['P'].ix[condition1]
-    df['Premium'].ix[condition2] = df['C'].ix[condition2]
+    df.loc[condition1, 'Premium'] = df.loc[condition1, 'P']
+    df.loc[condition2, 'Premium'] = df.loc[condition2, 'C']
 
-    options4 = df[['Strike','Mid Strike','Premium']].copy()
+    options4 = df[['Strike', 'Mid Strike', 'Premium']].copy()
     return options4
 
 
@@ -296,7 +286,7 @@ def strike_diff(options):
     """Compute difference between adjoining strikes
 
     """
-    options['dK'] = options.groupby(level = ['Date','Days'])['Strike'].apply(f)
+    options['dK'] = options.groupby(level=['Date', 'Days'])['Strike'].apply(f)
     return options
 
 
@@ -310,8 +300,7 @@ def strike_contribution(options4, yields):
     contrib.reset_index(inplace=True)
 
     contrib['sigma2'] = contrib['dK'] / contrib['Strike'] ** 2
-    contrib['sigma2'] *= (contrib['Premium']
-        * np.exp(contrib['Rate'] * contrib['Days'] / 36500))
+    contrib['sigma2'] *= (contrib['Premium'] * np.exp(contrib['Rate'] * contrib['Days'] / 36500))
 
     return contrib
 
@@ -322,7 +311,7 @@ def each_period_vol(contrib, mid_strike, forward):
     """
 
     # Sum up contributions from all strikes
-    sigma2 = contrib.groupby(['Date','Days'])[['sigma2']].sum() * 2
+    sigma2 = contrib.groupby(['Date', 'Days'])[['sigma2']].sum() * 2
 
     # Merge at-the-money strike and implied forward
     sigma2['Mid Strike'] = mid_strike
@@ -376,7 +365,7 @@ def interpolate_vix(two_sigmas):
 
     df = two_sigmas.copy()
 
-    for t in ['T1','T2']:
+    for t in ['T1', 'T2']:
         # Convert to fraction of the year
         df['days_' + t] = df[t].astype(float) / 365
         # Convert to miutes
@@ -384,8 +373,8 @@ def interpolate_vix(two_sigmas):
 
     denom = df['T2'] - df['T1']
     if denom[0] > 0:
-        coef1 = df['days_T1'] * (df['T2'] - 30*1440) / denom
-        coef2 = df['days_T2'] * (30*1440 - df['T1']) / denom
+        coef1 = df['days_T1'] * (df['T2'] - 30 * 1440) / denom
+        coef2 = df['days_T2'] * (30 * 1440 - df['T1']) / denom
     else:
         coef1 = coef2 = df['days_T1']
     df['sigma2_T1'] = df['sigma2_T1'] * coef1
@@ -396,7 +385,6 @@ def interpolate_vix(two_sigmas):
 
 
 def whitepaper():
-
     ### Import yields
     yields = import_yields()
 
@@ -405,10 +393,10 @@ def whitepaper():
 
     # Uncomment this block to check that VIX is computed,
     # when there are options with exactly 30 days to expire.
-#    yields.reset_index('Days', inplace=True)
-#    yields['Days'] += 21
-#    yields.set_index('Days', inplace=True, append=True)
-#    raw_options['Days'] += 21
+    #    yields.reset_index('Days', inplace=True)
+    #    yields['Days'] += 21
+    #    yields.set_index('Days', inplace=True, append=True)
+    #    raw_options['Days'] += 21
 
     ### Do some cleaning and indexing
     options = clean_options(raw_options)
@@ -453,6 +441,5 @@ def whitepaper():
 
 
 if __name__ == '__main__':
-
     vixvalue = whitepaper()
     print(vixvalue)
