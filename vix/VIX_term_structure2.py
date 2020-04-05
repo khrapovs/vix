@@ -15,7 +15,6 @@ import datetime as dt
 import pandas as ps
 import numpy as np
 import matplotlib.pyplot as plt
-#from __future__ import print_function
 
 ' ------------------------------------------------------------------ '
 ' Import real VIX '
