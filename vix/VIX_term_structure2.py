@@ -8,13 +8,13 @@ Extract SPX prices, returns, option prices, implied volatilities, etc
 
 """
 
+import datetime as dt
 import time
 import zipfile
-import StringIO
-import datetime as dt
-import pandas as ps
+from io import StringIO
+
 import numpy as np
-import matplotlib.pyplot as plt
+import pandas as ps
 
 # ' ------------------------------------------------------------------ '
 # ' Import real VIX '
@@ -208,12 +208,12 @@ for p in period:
 myVIX['VIX'] = realVIX
 myVIX.to_csv('myVIX.csv', index_label='Date')
 
-' ------------------------------------------------------------------ '
-' Plot data '
-myVIX[['5', 'VIX']].plot()
-plt.gcf().autofmt_xdate()
-plt.show()
-
-counts['5'].plot()
-plt.gcf().autofmt_xdate()
-plt.show()
+# ' ------------------------------------------------------------------ '
+# ' Plot data '
+# myVIX[['5', 'VIX']].plot()
+# plt.gcf().autofmt_xdate()
+# plt.show()
+#
+# counts['5'].plot()
+# plt.gcf().autofmt_xdate()
+# plt.show()
