@@ -25,11 +25,11 @@ import os
 # -- Khrapov --------------------------------------------------------------
 sys.path.insert(0, os.path.abspath('../..'))
 
-import mock
-
-MOCK_MODULES = ['numpy', 'pandas']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+# import mock
+#
+# MOCK_MODULES = ['numpy', 'pandas']
+# for mod_name in MOCK_MODULES:
+#     sys.modules[mod_name] = mock.Mock()
 
 # on_rtd is whether we are on readthedocs.org,
 # this line of code grabbed from docs.readthedocs.org
