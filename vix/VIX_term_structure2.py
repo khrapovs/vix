@@ -31,7 +31,7 @@ print(' Import real VIX ', (t2 - t1) / 60)
 t1 = time.time()
 zf = zipfile.ZipFile('WRDS/yield_curve.zip', 'r')
 name = zf.namelist()[0]
-data = StringIO.StringIO(zf.read(name))
+data = StringIO(zf.read(name))
 f = lambda x: dt.datetime.strptime(x, '%Y%m%d').date() if x != '' else x
 yields = ps.read_csv(data, converters={'date': f})
 t2 = time.time()
@@ -42,7 +42,7 @@ print(' Import yield curve ', (t2 - t1) / 60)
 t1 = time.time()
 zf = zipfile.ZipFile('WRDS/SP500_options_1996_2011.zip', 'r')
 name = zf.namelist()[0]
-data = StringIO.StringIO(zf.read(name))
+data = StringIO(zf.read(name))
 
 reader = ps.read_csv(data, chunksize=int(1e4),
                      converters={'date': f, 'exdate': f})

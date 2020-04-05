@@ -26,7 +26,7 @@ realVIX = ps.Series(realdata['VIX'], index=ps.Index(realdata['Date']))
 
 zf = zipfile.ZipFile('WRDS/yield_curve.zip', 'r')
 name = zf.namelist()[0]
-data = StringIO.StringIO(zf.read(name))
+data = StringIO(zf.read(name))
 f = lambda x: dt.datetime.strptime(x, '%Y%m%d').date() if x != '' else x
 yields = ps.read_csv(data, converters={'date': f})
 
