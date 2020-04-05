@@ -6,3 +6,14 @@
 
 [Jupyter notebook](http://nbviewer.ipython.org/github/khrapovs/vix/blob/master/notebooks/Replicate_VIXwite.ipynb)
 
+## Installation
+
+```shell script
+pip install -r requirements.txt
+```
+
+# Changelog
+
+## 2020-04-05
+
+- Update environment. Check that the notebook and `vix.reproduce_vix` still run with Python 3.7.
