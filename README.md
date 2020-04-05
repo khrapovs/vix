@@ -12,8 +12,8 @@
 pip install -r requirements.txt
 ```
 
-# Changelog
+## Changelog
 
-## 2020-04-05
+### 2020-04-05
 
 - Update environment. Check that the notebook and `vix.reproduce_vix` still run with Python 3.7.
