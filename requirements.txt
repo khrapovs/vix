@@ -26,7 +26,7 @@ mistune==2.0.3
 nbconvert==6.3.0
 nbformat==5.0.5
 notebook==6.4.10
-numpy==1.21.0
+numpy==1.22.0
 pandas==1.0.3
 pandocfilters==1.4.2
 parso==0.6.2
