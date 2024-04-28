@@ -93,7 +93,7 @@ def import_yields():
     20090101,37,0.38
 
     """
-    yields = pd.read_csv('../data/yields.csv',
+    yields = pd.read_csv('../../data/yields.csv',
                          converters={'Date': lambda x: dt.datetime.strptime(x, '%Y%m%d')})
     return yields.set_index(['Date', 'Days'])
 
@@ -110,7 +110,7 @@ def import_options():
 
     """
     # Function to parse dates of '20090101' format
-    raw_options = pd.read_csv('../data/options.csv',
+    raw_options = pd.read_csv('../../data/options.csv',
                               converters={'Expiration': lambda x: dt.datetime.strptime(x, '%Y%m%d')})
 
     # Function to convert days to internal timedelta format

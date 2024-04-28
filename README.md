@@ -8,12 +8,18 @@
 
 ## Installation
 
-```shell script
-pip install -r requirements.txt
+```shell
+pip install .
 ```
 
-## Changelog
+## Contribute
 
-### 2020-04-05
-
-- Update environment. Check that the notebook and `vix.reproduce_vix` still run with Python 3.7.
+Create a virtual environment and activate it:
+```shell
+python -m venv venv
+source venv/bin/activate
+```
+Install development dependencies:
+```shell
+pip install -e .
+```
