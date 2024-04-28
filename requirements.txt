@@ -6,7 +6,7 @@ chardet==3.0.4
 decorator==4.4.2
 defusedxml==0.6.0
 entrypoints==0.3
-idna==2.9
+idna==3.7
 importlib-metadata==1.6.0
 ipykernel==5.2.0
 ipython==8.10.0
