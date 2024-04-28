@@ -1,0 +1,32 @@
+[project]
+name = "vix"
+description = "VIX and related volatility indices"
+authors = [
+    {name = "Stanislav Khrapov", email = "khrapovs@gmail.com"}
+]
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "jupyterlab",
+]
+dynamic = ["version"]
+
+[project.urls]
+Source = "https://github.com/khrapovs/vix"
+
+[build-system]
+requires = [
+    "setuptools>=45",
+    "wheel",
+    "setuptools_scm[toml]>=6.2"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]

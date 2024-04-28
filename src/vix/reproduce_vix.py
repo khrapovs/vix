@@ -93,7 +93,7 @@ def import_yields():
     20090101,37,0.38
 
     """
-    yields = pd.read_csv('../data/yields.csv',
+    yields = pd.read_csv('../../data/yields.csv',
                          converters={'Date': lambda x: dt.datetime.strptime(x, '%Y%m%d')})
     return yields.set_index(['Date', 'Days'])
 
@@ -110,7 +110,7 @@ def import_options():
 
     """
     # Function to parse dates of '20090101' format
-    raw_options = pd.read_csv('../data/options.csv',
+    raw_options = pd.read_csv('../../data/options.csv',
                               converters={'Expiration': lambda x: dt.datetime.strptime(x, '%Y%m%d')})
 
     # Function to convert days to internal timedelta format
@@ -276,9 +276,9 @@ def out_of_the_money_options(options3, mid_strike):
 
 def f(group):
     new = group.copy()
-    new.iloc[1:-1] = np.array((group.iloc[2:] - group.iloc[:-2]) / 2)
-    new.iloc[0] = group.iloc[1] - group.iloc[0]
-    new.iloc[-1] = group.iloc[-1] - group.iloc[-2]
+    new.iloc[1:-1] = np.array((group.values[2:] - group.values[:-2]) / 2)
+    new.iloc[0] = group.values[1] - group.values[0]
+    new.iloc[-1] = group.values[-1] - group.values[-2]
     return new
 
 
