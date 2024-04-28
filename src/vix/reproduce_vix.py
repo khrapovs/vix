@@ -276,9 +276,9 @@ def out_of_the_money_options(options3, mid_strike):
 
 def f(group):
     new = group.copy()
-    new.iloc[1:-1] = np.array((group.iloc[2:] - group.iloc[:-2]) / 2)
-    new.iloc[0] = group.iloc[1] - group.iloc[0]
-    new.iloc[-1] = group.iloc[-1] - group.iloc[-2]
+    new.iloc[1:-1] = np.array((group.values[2:] - group.values[:-2]) / 2)
+    new.iloc[0] = group.values[1] - group.values[0]
+    new.iloc[-1] = group.values[-1] - group.values[-2]
     return new
 
 
