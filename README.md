@@ -42,7 +42,7 @@ C_{i}, & K_{i}>K_{*}
 
 at-the-money strike price is
 
-$$K_{*}	=	\max\lbrace K_{i}<F\rbrace,$$
+$$K_{*}	=	\max\lbrace K_{i}<F\rbrace ,$$
 
 forward price extracted from put-call parity:
 
@@ -50,7 +50,7 @@ $$F	=	K_{j}+e^{rT}\left|C_{j}-P_{j}\right|,$$
 
 with
 
-$$j=\min\left\{ \left|C_{i}-P_{i}\right|\right\},$$
+$$j=\min\lbrace \left|C_{i}-P_{i}\right|\rbrace ,$$
 
 and finally $r$ is the constant risk-free short rate appropriate for maturity $T$.
 
