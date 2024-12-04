@@ -1,10 +1,6 @@
-[![Documentation Status](https://readthedocs.org/projects/vix/badge/?version=latest)](https://vix.readthedocs.io/en/latest/?badge=latest)
-
 # VIX and related volatility indices
 
-[Documentation](http://vix.readthedocs.org/en/latest/)
-
-[Jupyter notebook](http://nbviewer.ipython.org/github/khrapovs/vix/blob/master/notebooks/Replicate_VIXwite.ipynb)
+[Jupyter notebook](,/notebooks/Replicate_VIXwite.ipynb)
 
 This notebook shows how to reproduce the VIX given the data in CBOE White Paper (http://www.cboe.com/micro/vix/vixwhite.pdf). The code works for any option data set, not only one day as in the White Paper. The option data for this example is exactly the same as in the Appendix 1 of the White Paper.
 
