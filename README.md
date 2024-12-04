@@ -22,7 +22,7 @@ $$V^{2}=\left[T_{1}\sigma_{1}^{2}\left(\frac{N_{T_{2}}-N_{30}}{N_{T_{2}}-N_{T_{1
 
 with each $\sigma_{i}^{2}$ computed according to
 
-$$\sigma^{2}=\frac{2}{T}\sum_{i=0}^{n}\frac{\Delta K_{i}}{K_{i}^{2}}e^{rT}M_{i}-\frac{1}{T}\left(\frac{F}{K_{*}}-1\right)^{2},$$
+$$\sigma^{2}=\frac{2}{T}\sum_{i=0}^{n}\frac{\Delta K_{i}}{K_{i}^{2}}e^{rT}M_{i}-\frac{1}{T}\left(\frac{F}{K_{\star}}-1\right)^{2},$$
 
 where the distance between strikes is
 
@@ -35,14 +35,14 @@ K_{n}-K_{n-1}, & i=n
 the out-of-the-money option premium is
 
 $$M_{i}	=	\begin{cases}
-P_{i}, & K_{i} < K_{0}\\
-\frac{1}{2}\left(P_{i}+C_{i}\right), & K_{i}=K_{0}\\
-C_{i}, & K_{i} > K_{0}
+P_{i}, & K_{i} < K_{\star}\\
+\frac{1}{2}\left(P_{i}+C_{i}\right), & K_{i}=K_{\star}\\
+C_{i}, & K_{i} > K_{\star}
 \end{cases}$$
 
 at-the-money strike price is
 
-$$K_{*}	=	\max\lbrace K_{i} < F\rbrace ,$$
+$$K_{\star}	=	\max\lbrace K_{i} < F\rbrace ,$$
 
 forward price extracted from put-call parity:
 
