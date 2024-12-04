@@ -42,7 +42,7 @@ C_{i}, & K_{i}>K_{*}
 
 at-the-money strike price is
 
-$$K_{*}	=	\max\lbrace K_{i}<F\rbrace ,$$
+$$K_{*}	=	\max\lbrace K_{i} < F\rbrace ,$$
 
 forward price extracted from put-call parity:
 
