@@ -8,7 +8,7 @@
 
 This notebook shows how to reproduce the VIX given the data in CBOE White Paper (http://www.cboe.com/micro/vix/vixwhite.pdf). The code works for any option data set, not only one day as in the White Paper. The option data for this example is exactly the same as in the Appendix 1 of the White Paper.
 
-Given are the prices $C_{i}$, $i\in `\{ 0,\ldots,n \}`$, of a series of European call options on the index with fixed maturity date $T$ and exercise prices $K_{i}$, $i\in\left\{ 0,\ldots,n\right\}$, as well as the prices $P_{i}$, $i\in\left\{ 0,\ldots,n\right\}$, of a series of European put options on the index with the same maturity date $T$ and exercise prices $K_{i}$. Let further hold $K_{i}<K_{i+1}$ for all $i\in\left\{ 0,\ldots,n-1\right\}$.
+Given are the prices $C_{i}$, $i\in \lbrace 0,\ldots,n \rbrace $, of a series of European call options on the index with fixed maturity date $T$ and exercise prices $K_{i}$, $i\in\left\{ 0,\ldots,n\right\}$, as well as the prices $P_{i}$, $i\in\left\{ 0,\ldots,n\right\}$, of a series of European put options on the index with the same maturity date $T$ and exercise prices $K_{i}$. Let further hold $K_{i}<K_{i+1}$ for all $i\in\left\{ 0,\ldots,n-1\right\}$.
 
 The VIX itself is
 $$VIX=100\cdot\sqrt{V^{2}},$$
