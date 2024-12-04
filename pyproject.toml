@@ -11,7 +11,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.10"
-dependencies = ["pandas", "jupyterlab"]
+dependencies = ["pandas", "jupyterlab", "pre-commit>=4.0.1"]
 dynamic = ["version"]
 
 [project.urls]
@@ -22,3 +22,28 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.ruff]
+line-length = 120
+src = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "D", "B", "I", "ARG"]
+ignore = [
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D106",
+  "D107",
+  "D213",
+  "D417",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
