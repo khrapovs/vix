@@ -11,7 +11,9 @@ This notebook shows how to reproduce the VIX given the data in CBOE White Paper 
 Given are the prices $C_{i}$, $i\in \lbrace 0,\ldots,n \rbrace $, of a series of European call options on the index with fixed maturity date $T$ and exercise prices $K_{i}$, $i\in\lbrace 0,\ldots,n\rbrace$, as well as the prices $P_{i}$, $i\in\lbrace 0,\ldots,n\rbrace, of a series of European put options on the index with the same maturity date $T$ and exercise prices $K_{i}$. Let further hold $K_{i}<K_{i+1}$ for all $i\in\lbrace 0,\ldots,n-1\rbrace$.
 
 The VIX itself is
+
 $$VIX=100\cdot\sqrt{V^{2}},$$
+
 where $V$ is explained below.
 
 Since there are days when there no options with precisely 30 days to expiration, we have to interpolate between near-term index and next-term index:
