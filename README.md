@@ -35,9 +35,9 @@ K_{n}-K_{n-1}, & i=n
 the out-of-the-money option premium is
 
 $$M_{i}	=	\begin{cases}
-P_{i}, & K_{i} < K_{*}\\
-\frac{1}{2}\left(P_{i}+C_{i}\right), & K_{i}=K_{*}\\
-C_{i}, & K_{i} > K_{*}
+P_{i}, & K_{i} < K_{0}\\
+\frac{1}{2}\left(P_{i}+C_{i}\right), & K_{i}=K_{0}\\
+C_{i}, & K_{i} > K_{0}
 \end{cases}$$
 
 at-the-money strike price is
